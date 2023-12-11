@@ -7,14 +7,14 @@ namespace StockTracker.Helpers
     {
         public Task BindModelAsync(ModelBindingContext bindingContext)
         {
-            var propertyName = bindingContext.ModelName;
-            var valueProvider = bindingContext.ValueProvider.GetValue(propertyName);
+            string propertyName = bindingContext.ModelName;
+            ValueProviderResult valueProvider = bindingContext.ValueProvider.GetValue(propertyName);
 
             if (valueProvider == ValueProviderResult.None) return Task.CompletedTask;
 
             try
             {
-                var deserializedValue = JsonConvert.DeserializeObject<T>(valueProvider.FirstValue);
+                T deserializedValue = JsonConvert.DeserializeObject<T>(valueProvider.FirstValue);
                 bindingContext.Result = ModelBindingResult.Success(deserializedValue);
             }
             catch (Exception ex)

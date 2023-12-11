@@ -31,7 +31,7 @@ namespace StockTracker.Helpers
                 IRow row = sheet.GetRow(currentRow);
                 if (row == null) break;
 
-                var obj = new T();
+                T obj = new();
 
                 foreach (var property in typeof(T).GetProperties())
                 {

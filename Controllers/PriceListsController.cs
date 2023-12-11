@@ -27,15 +27,15 @@ namespace StockTracker.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResponse<List<GetPriceListDTO>>>> GetPriceLists([FromQuery] PaginationDTO pagination)
         {
-            var route = Request.Path.Value;
-            var pagedData = await _context.PriceLists
+            string route = Request.Path.Value;
+            List<PriceList> pagedData = await _context.PriceLists
                 .Include(p => p.Product)
                 .Skip((pagination.PageNumber - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
                 .ToListAsync();
-            var mappedData = mapper.Map<List<GetPriceListDTO>>(pagedData);
-            var totalRecords = await _context.PriceLists.CountAsync();
-            var pagedResponse = PaginationHelper.CreatePagedResponse<GetPriceListDTO>(mappedData, pagination, totalRecords, uriService, route);
+            List<GetPriceListDTO> mappedData = mapper.Map<List<GetPriceListDTO>>(pagedData);
+            int totalRecords = await _context.PriceLists.CountAsync();
+            PagedResponse<List<GetPriceListDTO>> pagedResponse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
             return Ok(pagedResponse);
         }
 
@@ -43,7 +43,7 @@ namespace StockTracker.Controllers
         [HttpGet("{id}", Name = "GetPriceList")]
         public async Task<ActionResult<GetPriceListDTO>> GetPriceList(int id)
         {
-            var priceList = await _context.PriceLists
+            PriceList priceList = await _context.PriceLists
                 .Include(p => p.Product)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -56,11 +56,11 @@ namespace StockTracker.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPriceList(int id, [FromForm] PutPriceListDTO priceList)
         {
-            var dbEntity = await _context.PriceLists.FindAsync(id);
+            PriceList dbEntity = await _context.PriceLists.FindAsync(id);
 
             if(dbEntity == null) return NotFound();
 
-            var entity = mapper.Map(priceList, dbEntity);
+            _ = mapper.Map(priceList, dbEntity);
 
             await _context.SaveChangesAsync();
 
@@ -104,12 +104,12 @@ namespace StockTracker.Controllers
         [HttpPost]
         public async Task<ActionResult<PriceList>> PostPriceList([FromForm] PostPriceListDTO priceList)
         {
-            var entity = mapper.Map<PriceList>(priceList);
+            PriceList entity = mapper.Map<PriceList>(priceList);
 
             _context.Add(entity);
             await _context.SaveChangesAsync();
 
-            var dto = mapper.Map<GetPriceListDTO>(entity);
+            GetPriceListDTO dto = mapper.Map<GetPriceListDTO>(entity);
 
             return CreatedAtAction("GetPriceList", new { id = dto.Id }, dto);
         }
@@ -125,9 +125,9 @@ namespace StockTracker.Controllers
             List<ImportPriceListFromExcelDTO> importedPriceLists = ExcelImportHelper.Import<ImportPriceListFromExcelDTO>(filePath);
             List<PriceList> priceLists = new List<PriceList>();
 
-            foreach(var priceList in importedPriceLists)
+            foreach(ImportPriceListFromExcelDTO priceList in importedPriceLists)
             {
-                var product = await _context.ProductCodes
+                ProductCode product = await _context.ProductCodes
                     .FirstOrDefaultAsync(x => x.Code == priceList.ProductCode);
 
                 if (product == null) return BadRequest($"Product with code {priceList.ProductCode} does not exist.");
@@ -137,7 +137,7 @@ namespace StockTracker.Controllers
                 priceLists.Add(entity);
             }
 
-            foreach (var priceList in priceLists)
+            foreach (PriceList priceList in priceLists)
             {
                 await _context.PriceLists.AddAsync(priceList);
             }
@@ -153,7 +153,7 @@ namespace StockTracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePriceList(int id)
         {
-            var priceList = await _context.PriceLists.FindAsync(id);
+            PriceList priceList = await _context.PriceLists.FindAsync(id);
             if (priceList == null)
             {
                 return NotFound();

@@ -7,6 +7,7 @@ using StockTracker.DTO.Stock;
 using StockTracker.Helpers;
 using StockTracker.Models;
 using StockTracker.Services;
+using StockTracker.Wrappers;
 
 namespace StockTracker.Controllers
 {
@@ -23,14 +24,14 @@ namespace StockTracker.Controllers
         [HttpGet]
         public async Task<IActionResult> GetStocks([FromQuery] PaginationDTO pagination)
         {
-            var route = Request.Path.Value;
-            var pagedData = await _context.Stocks
+            string route = Request.Path.Value;
+            List<Stock> pagedData = await _context.Stocks
                 .Skip((pagination.PageNumber - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
                 .ToListAsync();
-            var mappedData = mapper.Map<List<GetStockDTO>>(pagedData);
-            var totalRecords = await _context.Stocks.CountAsync();
-            var pagedResponse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
+            List<GetStockDTO> mappedData = mapper.Map<List<GetStockDTO>>(pagedData);
+            int totalRecords = await _context.Stocks.CountAsync();
+            PagedResponse<List<GetStockDTO>> pagedResponse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
             return Ok(pagedResponse);
         }
 
@@ -38,7 +39,7 @@ namespace StockTracker.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GetStockDTO>> GetStock(int id)
         {
-            var stock = await _context.Stocks.FindAsync(id);
+            Stock stock = await _context.Stocks.FindAsync(id);
             if (stock == null) return NotFound();
 
             return mapper.Map<GetStockDTO>(stock);
@@ -47,7 +48,7 @@ namespace StockTracker.Controllers
         [HttpGet("byProduct/{id}")]
         public async Task<ActionResult<GetStockDTO>> GetStockByProduct(int id)
         {
-            var stock = await _context.Stocks.FirstOrDefaultAsync(x => x.ProductId == id);
+            Stock stock = await _context.Stocks.FirstOrDefaultAsync(x => x.ProductId == id);
             if (stock == null) return NotFound();
             return mapper.Map<GetStockDTO>(stock);
         }
@@ -57,7 +58,7 @@ namespace StockTracker.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStock(int id, PostStockDTO stock)
         {
-            var stockDb = await _context.Stocks
+            Stock stockDb = await _context.Stocks
                 .FirstOrDefaultAsync(x => x.Id == id);
             if (stockDb == null) return NotFound();
 
@@ -72,11 +73,11 @@ namespace StockTracker.Controllers
         [HttpPost]
         public async Task<IActionResult> PostStock(PostStockDTO stock)
         {
-            var entity = mapper.Map<Stock>(stock);
+            Stock entity = mapper.Map<Stock>(stock);
             _context.Stocks.Add(entity);
             await _context.SaveChangesAsync();
 
-            var dto = mapper.Map<GetStockDTO>(entity);
+            GetStockDTO dto = mapper.Map<GetStockDTO>(entity);
 
             return CreatedAtAction(nameof(GetStock), new { id = dto.Id }, dto);
         }
@@ -85,7 +86,7 @@ namespace StockTracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteStock(int id)
         {
-            var stock = await _context.Stocks.FindAsync(id);
+            Stock stock = await _context.Stocks.FindAsync(id);
             if (stock == null)
             {
                 return NotFound();

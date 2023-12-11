@@ -1,18 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using StockTracker.Database;
 using StockTracker.Services;
-using System.Text.Json.Serialization;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers().AddNewtonsoftJson();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(Program));
-
 builder.Services.AddDbContext<DatabaseConnection>(
     opt =>
     {
@@ -20,16 +16,14 @@ builder.Services.AddDbContext<DatabaseConnection>(
     });
 
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddTransient<IFileSaver, LocalFileSaver>();
 builder.Services.AddSingleton<IUriService>(o =>
 {
-    var accessor = o.GetRequiredService<IHttpContextAccessor>();
-    var request = accessor.HttpContext.Request;
-    var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+    IHttpContextAccessor accessor = o.GetRequiredService<IHttpContextAccessor>();
+    HttpRequest request = accessor.HttpContext.Request;
+    string uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
     return new UriService(uri);
 });
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAnyOrigin",
@@ -39,7 +33,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

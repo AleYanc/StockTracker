@@ -12,8 +12,8 @@ namespace StockTracker.Services
         {
             if (route != null)
             {
-                var fileName = Path.GetFileName(route);
-                var directory = Path.Combine(env.WebRootPath, container, fileName);
+                string fileName = Path.GetFileName(route);
+                string directory = Path.Combine(env.WebRootPath, container, fileName);
 
                 if (File.Exists(directory))
                 {
@@ -31,7 +31,7 @@ namespace StockTracker.Services
 
         public async Task<string> SaveFile(byte[] content, string extension, string container, string contentType)
         {
-            var fileName = $"{Guid.NewGuid()}{extension}";
+            string fileName = $"{Guid.NewGuid()}{extension}";
             string folder = Path.Combine(env.WebRootPath, container);
             if (!Directory.Exists(folder))
             {
@@ -41,8 +41,8 @@ namespace StockTracker.Services
             string route = Path.Combine(folder, fileName);
             await File.WriteAllBytesAsync(route, content);
 
-            var actualUrl = $"{httpContextAccessor.HttpContext.Request.Scheme}://{httpContextAccessor.HttpContext.Request.Host}";
-            var dbUrl = Path.Combine(actualUrl, container, fileName).Replace("\\", "/");
+            string actualUrl = $"{httpContextAccessor.HttpContext.Request.Scheme}://{httpContextAccessor.HttpContext.Request.Host}";
+            string dbUrl = Path.Combine(actualUrl, container, fileName).Replace("\\", "/");
             return dbUrl;
         }
 

@@ -118,7 +118,7 @@ namespace StockTracker.Controllers
             {
                 using(MemoryStream memoryStream = new())
                 {
-                    foreach (var image in product.Images)
+                    foreach (IFormFile image in product.Images)
                     {
                         await image.CopyToAsync(memoryStream);
                         byte[] content = memoryStream.ToArray();
@@ -134,7 +134,7 @@ namespace StockTracker.Controllers
             _context.Products.Add(entity);
             await _context.SaveChangesAsync();
 
-            var dto = mapper.Map<GetProductDTO>(entity);
+            GetProductDTO dto = mapper.Map<GetProductDTO>(entity);
 
             ProductCodeHelper productCodeHelper = new();
             string code = await productCodeHelper.BuildCode(_context);

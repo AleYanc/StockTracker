@@ -9,6 +9,7 @@ using StockTracker.DTO.Stock;
 using StockTracker.Helpers;
 using StockTracker.Models;
 using StockTracker.Services;
+using StockTracker.Wrappers;
 
 namespace StockTracker.Controllers
 {
@@ -23,32 +24,32 @@ namespace StockTracker.Controllers
 
         // GET: api/Sales
         [HttpGet]
-        public async Task<IActionResult> GetSales([FromQuery] PaginationDTO pagination)
+        public async Task<ActionResult<PagedResponse<List<GetSalesDTO>>>> GetSales([FromQuery] PaginationDTO pagination)
         {
-            var route = Request.Path.Value;
-            var pagedData = await _context.Sales
+            string route = Request.Path.Value;
+            List<Sale> pagedData = await _context.Sales
                 .Skip((pagination.PageNumber - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
                 .ToListAsync();
-            var mappedData = mapper.Map<List<GetSalesDTO>>(pagedData);
-            var totalRecords = await _context.Sales.CountAsync();
-            var pagedResponnse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
+            List<GetSalesDTO> mappedData = mapper.Map<List<GetSalesDTO>>(pagedData);
+            int totalRecords = await _context.Sales.CountAsync();
+            PagedResponse<List<GetSalesDTO>> pagedResponnse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
 
             return Ok(pagedResponnse);
         }
 
         [HttpGet("filtered")]
-        public async Task<IActionResult> FilteredSales([FromQuery] FilteredSaleParamsDTO filteredSaleParams, [FromQuery] PaginationDTO pagination)
+        public async Task<ActionResult<PagedResponse<List<GetSalesDTO>>>> FilteredSales([FromQuery] FilteredSaleParamsDTO filteredSaleParams, [FromQuery] PaginationDTO pagination)
         {
             List<string> validScopes = new List<string> { "day", "month", "week", "year" };
             if(filteredSaleParams == null || !validScopes.Contains(filteredSaleParams.FilteredScope)) return BadRequest("Invalid scope. Please check valid ones: " + string.Join(", ", validScopes));
 
-            var route = Request.Path.Value;
-            var pagedData = await FilterSales(pagination, filteredSaleParams);
+            string route = Request.Path.Value;
+            List<Sale> pagedData = await FilterSales(pagination, filteredSaleParams);
 
-            var mappedData = mapper.Map<List<GetSalesDTO>>(pagedData);
-            var totalRecords = await _context.Sales.CountAsync();
-            var pagedResponnse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
+            List<GetSalesDTO> mappedData = mapper.Map<List<GetSalesDTO>>(pagedData);
+            int totalRecords = await _context.Sales.CountAsync();
+            PagedResponse<List<GetSalesDTO>> pagedResponnse = PaginationHelper.CreatePagedResponse(mappedData, pagination, totalRecords, uriService, route);
 
             return Ok(pagedResponnse);
         }
@@ -57,7 +58,7 @@ namespace StockTracker.Controllers
         [HttpGet("{id}", Name = "GetSale")]
         public async Task<ActionResult<GetSalesDTO>> GetSale(int id)
         {
-            var sale = await _context.Sales.FindAsync(id);
+            Sale sale = await _context.Sales.FindAsync(id);
 
             if (sale == null) return NotFound();
             
@@ -100,11 +101,11 @@ namespace StockTracker.Controllers
         [HttpPost]
         public async Task<IActionResult> PostSale([FromForm] PostSaleDTO sale)
         {
-            var entity = mapper.Map<Sale>(sale);
-            var products = JsonConvert.DeserializeObject<List<int>>(sale.Products);
+            Sale entity = mapper.Map<Sale>(sale);
+            List<int> products = JsonConvert.DeserializeObject<List<int>>(sale.Products);
 
             // Check if products from list exists on DB
-            var invalidProducts = await ProductExists(products);
+            List<int> invalidProducts = await ProductExists(products);
 
             if(invalidProducts.Count != 0) return BadRequest(new { Message = "There are invalid products", invalidProducts });
 
@@ -113,7 +114,7 @@ namespace StockTracker.Controllers
             _context.Sales.Add(entity);
             await _context.SaveChangesAsync();
 
-            var dto = mapper.Map<GetSalesDTO>(entity);
+            GetSalesDTO dto = mapper.Map<GetSalesDTO>(entity);
 
             return CreatedAtRoute(nameof(GetSale), new { id = dto.Id }, dto);
         }
@@ -122,7 +123,7 @@ namespace StockTracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSale(int id)
         {
-            var sale = await _context.Sales.FindAsync(id);
+            Sale sale = await _context.Sales.FindAsync(id);
             if (sale == null)
             {
                 return NotFound();
@@ -141,7 +142,7 @@ namespace StockTracker.Controllers
 
         private async Task<List<Sale>> FilterSales(PaginationDTO pagination, FilteredSaleParamsDTO filteredSaleParams)
         {
-            var filteredProduct = await _context.Sales
+            List<Sale> filteredProduct = await _context.Sales
                 .Where(x =>
                 filteredSaleParams.FilteredScope == "day"
                     ? x.SaleDate >= DateTime.Now.AddDays(-filteredSaleParams.FilterValue).Date
@@ -159,7 +160,7 @@ namespace StockTracker.Controllers
 
         private async Task<List<int>> ProductExists(List<int> productIds)
         {
-            var products = await _context.Products
+            List<int> products = await _context.Products
                 .Where(x => productIds.Contains(x.Id))
                 .Select(x => x.Id)
                 .ToListAsync();
