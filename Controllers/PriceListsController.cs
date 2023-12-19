@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockTracker.Database;
@@ -14,6 +15,7 @@ namespace StockTracker.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PriceListsController(DatabaseConnection context, IMapper mapper,
         IUriService uriService, IFileSaver fileSaver, IWebHostEnvironment webHostEnvironment) : ControllerBase
     {

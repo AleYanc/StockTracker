@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using StockTracker.DTO.Auth;
 using StockTracker.DTO.PriceLists;
 using StockTracker.DTO.Product;
 using StockTracker.DTO.Sale;
@@ -11,6 +13,9 @@ namespace StockTracker.Helpers
     {
         public AutoMapperProfiles() 
         {
+            // Identity
+            CreateMap<RegisterDTO, IdentityUser>();
+
             // Product
             CreateMap<Product, GetProductDTO>()
                 .ReverseMap();

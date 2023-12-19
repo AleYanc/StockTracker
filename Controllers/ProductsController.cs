@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -14,6 +15,7 @@ namespace StockTracker.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductsController(DatabaseConnection context, 
         IMapper mapper, IFileSaver fileSaver, IUriService uriService, IWebHostEnvironment webHostEnvironment) : ControllerBase
     {

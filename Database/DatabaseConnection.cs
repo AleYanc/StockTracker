@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using StockTracker.Models;
 
 namespace StockTracker.Database
 {
-    public class DatabaseConnection(DbContextOptions options) : DbContext(options)
+    public class DatabaseConnection(DbContextOptions options) : IdentityDbContext(options)
     {
         public DbSet<Product> Products { get; set; }
         public DbSet<Stock> Stocks { get; set; }
